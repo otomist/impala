@@ -114,16 +114,31 @@ impl Psk {
             .style(Style::default().fg(Color::White))
             .block(Block::new().padding(Padding::uniform(1)));
 
-        let passkey = Paragraph::new({
-            if self.show_password {
-                self.passphrase.value().to_string()
-            } else {
-                "*".repeat(self.passphrase.value().len())
-            }
-        })
-        .alignment(Alignment::Center)
-        .style(Style::default().fg(Color::White))
-        .block(Block::new().style(Style::default().bg(Color::DarkGray)));
+        let passkey_str = if self.show_password {
+            self.passphrase.value().to_string()
+        } else {
+            "*".repeat(self.passphrase.value().len())
+        };
+
+        let cursor = self.passphrase.cursor();
+        let cursor = cursor.min(passkey_str.len());
+
+        let (before, after) = passkey_str.split_at(cursor);
+
+        let mut line = Line::default();
+        if !before.is_empty() {
+            line.spans.push(Span::raw(before.to_string()));
+        }
+
+        line.spans.push(Span::styled("|", Style::default().fg(Color::White)));
+        if !after.is_empty() {
+            line.spans.push(Span::raw(after.to_string()));
+        }
+
+        let passkey = Paragraph::new(line)
+            .alignment(Alignment::Center)
+            .style(Style::default().fg(Color::White))
+            .block(Block::new().style(Style::default().bg(Color::DarkGray)));
 
         let show_password_icon = if self.show_password {
             Text::from("󰈈 ").centered()
